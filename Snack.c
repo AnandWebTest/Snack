@@ -1,33 +1,26 @@
+
+//To make the snake game area larger to match the size of the Windows console window, you'll need to adjust the dimensions of the game board and the position of the snake and the fruit accordingly. Here's the modified code:
+
+//c
+//Copy code
 #include <stdio.h>
 #include <stdlib.h>
-#include <termios.h>
-#include <unistd.h>
-#include <fcntl.h>
 #include <time.h>
+#include <conio.h>
+#include <windows.h>
+
+#define WIDTH 80
+#define HEIGHT 25
 
 int kbhit() {
-    struct termios oldt, newt;
-    int ch;
-    int oldf;
+    return _kbhit();
+}
 
-    tcgetattr(STDIN_FILENO, &oldt);
-    newt = oldt;
-    newt.c_lflag &= ~(ICANON | ECHO);
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-    oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
-    fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
-
-    ch = getchar();
-
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-    fcntl(STDIN_FILENO, F_SETFL, oldf);
-
-    if (ch != EOF) {
-        ungetc(ch, stdin);
-        return 1;
-    }
-
-    return 0;
+void gotoxy(int x, int y) {
+    COORD coord;
+    coord.X = x;
+    coord.Y = y;
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
 }
 
 int main() {
@@ -35,29 +28,34 @@ int main() {
 
     int gameover = 0;
     int score = 0;
-    int x = 10, y = 10;
-    int fruitX = rand() % 20;
-    int fruitY = rand() % 20;
+    int x = WIDTH / 2, y = HEIGHT / 2;
+    int fruitX = rand() % WIDTH;
+    int fruitY = rand() % HEIGHT;
     int nTail = 0;
-    int tailX[100], tailY[100];
+    int tailX[WIDTH * HEIGHT];
+    int tailY[WIDTH * HEIGHT];
     enum eDirecton { STOP = 0, LEFT, RIGHT, UP, DOWN };
     enum eDirecton dir = STOP;
 
     while (!gameover) {
-        usleep(100000); // Adjust the speed of the game
+        Sleep(100); // Adjust the speed of the game
 
         if (kbhit()) {
-            switch (getchar()) {
+            switch (_getch()) {
                 case 'a':
+                case 75: // left arrow key
                     dir = LEFT;
                     break;
                 case 'd':
+                case 77: // right arrow key
                     dir = RIGHT;
                     break;
                 case 'w':
+                case 72: // up arrow key
                     dir = UP;
                     break;
                 case 's':
+                case 80: // down arrow key
                     dir = DOWN;
                     break;
                 case 'x':
@@ -97,7 +95,7 @@ int main() {
                 break;
         }
 
-        if (x < 0 || x >= 20 || y < 0 || y >= 20) {
+        if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT) {
             gameover = 1;
         }
 
@@ -109,16 +107,16 @@ int main() {
 
         if (x == fruitX && y == fruitY) {
             score += 10;
-            fruitX = rand() % 20;
-            fruitY = rand() % 20;
+            fruitX = rand() % WIDTH;
+            fruitY = rand() % HEIGHT;
             nTail++;
         }
 
-        system("clear");
+        system("cls");
 
-        for (int i = 0; i < 20; i++) {
-            for (int j = 0; j < 20; j++) {
-                if (i == 0 || i == 19 || j == 0 || j == 19) {
+        for (int i = 0; i < HEIGHT; i++) {
+            for (int j = 0; j < WIDTH; j++) {
+                if (i == 0 || i == HEIGHT - 1 || j == 0 || j == WIDTH - 1) {
                     printf("#");
                 } else if (i == fruitY && j == fruitX) {
                     printf("F");
